@@ -130,41 +130,25 @@ interface IUniswapV2Pair {
         );
 }
 
-interface ICurvePool {
-    // This is similar to "Swap" for uniswap
-    // i,j are both indices into the pool. 0 = Dai, 1 = USDC, 2 = USDT
-    function exchange(int128 i, int128 j, uint256 amountIToSell, uint256 amountJToReceive) external;
-}
-
 // ----------------------IMPLEMENTATION------------------------------
 
 contract LiquidationOperator is IUniswapV2Callee {
     uint8 public constant health_factor_decimals = 18;
 
     // TODO: define constants used in the contract including ERC-20 tokens, Uniswap Pairs, Aave lending pools, etc. */
-    address public constant userToLiquidate = 0x59CE4a2AC5bC3f5F225439B2993b86B42f6d3e9F;
-    address public constant usdtAddr = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-    address public constant usdcAddr = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address public constant wbtcAddr = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-    address public constant wethAddr = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address public constant sushiSwapFactoryAddr = 0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac;
-    // DAI-USDC-USDT pool
-    address public constant curveStable3PoolAddr = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
-    address public constant aaveLendingPoolAddr = 0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9;
-    address public owner;
-    uint8 public constant usdtDecimals = 6;
-    uint8 public constant wbtcDecimals = 8;
-    uint8 public constant wethDecimals = 18;
+    //    *** Your code here ***    
+    address public constant userToLiquidate = 0x59CE4a2AC5bC3f5F225439B2993b86B42f6d3e9F; 
+    address address_contract = address(this);  
+    address address_USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7; 
+    address address_WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;  
+    address address_WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address address_lending_pool = 0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9;  
+    address address_uniswap = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f; 
 
+// 
     
-    // --- Hardcoded liquidation parameters ---- //
-    uint public constant usdcToBorrow = 2919549181195;
 
-
-    modifier onlyOwner {
-        require(msg.sender == owner, "ERROR: Operate can only be called by the contract owner");
-        _;
-    }
+    // END TODO
 
     // some helper function, it is totally fine if you can finish the lab without using these function
     // https://github.com/Uniswap/v2-periphery/blob/master/contracts/libraries/UniswapV2Library.sol
@@ -204,61 +188,35 @@ contract LiquidationOperator is IUniswapV2Callee {
         amountIn = (numerator / denominator) + 1;
     }
 
-    /**
-     * @param _amountToSell the amount of token to sell into the Curve pool
-     * Note that this assumes we are operating in a Curve pool
-     */
-    function _getMinAmountOfTokenAfterSwap(uint256 _amountToSell) public pure returns(uint256) {
-        // 1% max slippage (in basis points)
-        uint _maxSlippage = 100;
-        uint256 maxSlippage = _amountToSell * _maxSlippage / 10000;
-        return _amountToSell - maxSlippage;
-    }
-
     constructor() {
         // TODO: (optional) initialize your contract
-        owner = msg.sender;
+        //   *** Your code here ***
+        // END TODO
     }
 
     // TODO: add a `receive` function so that you can withdraw your WETH
-    receive() external payable {}
+    //   *** Your code here ***
+    // END TODO
 
     // required by the testing script, entry for your liquidation call
-    function operate() onlyOwner external {
+    function operate() external {
         // TODO: implement your liquidation logic
 
         // 0. security checks and initializing variables
         //    *** Your code here ***
 
         // 1. get the target user account data & make sure it is liquidatable
-        ILendingPool aaveLendingPool = ILendingPool(aaveLendingPoolAddr);
-        uint256 healthFactor;
-        (, , , , , healthFactor) = aaveLendingPool.getUserAccountData(userToLiquidate);
-        // Ensure that liqudation is possible
-        require(healthFactor / 10 ** health_factor_decimals == 0, "User is not liquidatable");
+        //    *** Your code here ***
 
         // 2. call flash swap to liquidate the target user
         // based on https://etherscan.io/tx/0xac7df37a43fab1b130318bbb761861b8357650db2e2c6493b73d6da3d9581077
         // we know that the target user borrowed USDT with WBTC as collateral
         // we should borrow USDT, liquidate the target user and get the WBTC, then swap WBTC to repay uniswap
         // (please feel free to develop other workflows as long as they liquidate the target user successfully)
-        
-        // We want to flash loan USDC from the USDC/WETH Sushiswap pool
-        IUniswapV2Factory sushiSwapFactory = IUniswapV2Factory(sushiSwapFactoryAddr);
-        address usdcWethPairAddr = sushiSwapFactory.getPair(usdcAddr, wethAddr);
-        IUniswapV2Pair usdcWethPair = IUniswapV2Pair(usdcWethPairAddr);
-
-        // So now, we can go ahead and take out a flash loan for the desired amount of USDC
-        usdcWethPair.swap(usdcToBorrow, 0, address(this), abi.encode("flash loan"));
-        // Now program execution switches to uniswapV2Call
-        // Below this line, we are assuming that UniswapV2Call and the swap (function) have executed
+        //    *** Your code here ***
 
         // 3. Convert the profit into ETH and send back to sender
-        IWETH weth = IWETH(wethAddr);
-        weth.withdraw(weth.balanceOf(address(this)));
-        console.log("The amount of ETH in our contract is %d\n", address(this).balance);
-        payable(msg.sender).transfer(address(this).balance);
-        console.log("The NEW amount of ETH in our contract is %d\n", address(this).balance);
+        //    *** Your code here ***
 
         // END TODO
     }
@@ -266,74 +224,24 @@ contract LiquidationOperator is IUniswapV2Callee {
     // required by the swap
     function uniswapV2Call(
         address,
-        uint256 usdcFlashSwapped,
         uint256,
+        uint256 amount1,
         bytes calldata
     ) external override {
         // TODO: implement your liquidation logic
-        // In this function, we can assume that we have been given the desired amount of USDC
 
         // 2.0. security checks and initializing variables
         //    *** Your code here ***
 
-        // 2.1 let's exchange USDC for USDT using the curve pool
-        {
-            ICurvePool curveStable3Pool = ICurvePool(curveStable3PoolAddr);
-            IERC20 usdc = IERC20(usdcAddr);
-            uint usdcBalance = usdc.balanceOf(address(this));
-            usdc.approve(curveStable3PoolAddr, usdcBalance);
-            curveStable3Pool.exchange(1, 2, usdcBalance, _getMinAmountOfTokenAfterSwap(usdcBalance));
-        }
+        // 2.1 liquidate the target user
+        //    *** Your code here ***
 
-        // At this point we should have USDT
-        // 2.2 liquidate the target user
-        {
-            IERC20 usdt = IERC20(usdtAddr);
-            uint256 usdtBalance = usdt.balanceOf(address(this));
-            console.log("The amount of usdt is %d\n", usdtBalance / 10 ** usdtDecimals );
-            // console.log("The amount of usdt is %d\n", usdt.balanceOf(address(this)) );
-            ILendingPool aaveLendingPool = ILendingPool(aaveLendingPoolAddr);
-            // We need to approve Aave to spend our usdt
-            usdt.approve(aaveLendingPoolAddr, usdtBalance);
-            aaveLendingPool.liquidationCall(wbtcAddr, usdtAddr, userToLiquidate, usdtBalance, false);
-        }
-
-        // --- Common vars for 2.3, 2.4 --- //
-        IUniswapV2Factory sushiSwapFactory = IUniswapV2Factory(sushiSwapFactoryAddr);
-        uint112 wethReserve;
-        uint112 wbtcReserve;
-        uint112 usdcReserve;
-        IERC20 weth = IERC20(wethAddr);
-
-        // 2.3 swap WBTC for other things or repay directly
-        // So at this point we have our WBTC and we want to swap it for WETH
-        {
-            IERC20 wbtc = IERC20(wbtcAddr);
-            uint256 balanceOfWbtc = wbtc.balanceOf(address(this));
-            console.log("The amount of WBTC is %d\n", wbtc.balanceOf(address(this)) / 10 ** wbtcDecimals);
-
-            // Let's swap all of our WBTC for WETH using Sushiswap (deeper liquidity is available)
-            address wbtcWethPairAddr = sushiSwapFactory.getPair(wbtcAddr, wethAddr);
-            IUniswapV2Pair wbtcWethPair = IUniswapV2Pair(wbtcWethPairAddr);
-            // wbtc.approve(wbtcWethPairAddr, balanceOfWbtc);
-            wbtc.transfer(wbtcWethPairAddr, balanceOfWbtc);
-
-            // How much WETH should we expect out?
-            (wbtcReserve, wethReserve,) = wbtcWethPair.getReserves();
-            uint256 wethToExepctToReceive = getAmountOut(balanceOfWbtc, wbtcReserve, wethReserve);
-            
-            wbtcWethPair.swap(0, wethToExepctToReceive, address(this), "");
-            // Let's check how much WETH we now have
-            console.log("The amount of WETH is %d\n", weth.balanceOf(address(this)) / 10 ** wethDecimals);
-        }
+        // 2.2 swap WBTC for other things or repay directly
+        //    *** Your code here ***
 
         // 2.3 repay
-        // Well, how much WETH do we need to give back in the pool in order to maintain the invariant x*y=k?
-        address usdcWethPairAddr = sushiSwapFactory.getPair(usdcAddr, wethAddr);
-        IUniswapV2Pair usdcWethPair = IUniswapV2Pair(usdcWethPairAddr);
-        (usdcReserve, wethReserve,) = usdcWethPair.getReserves();
-        uint256 wethToPayBack = getAmountIn(usdcFlashSwapped, wethReserve, usdcReserve);
-        weth.transfer(usdcWethPairAddr, wethToPayBack);
-        console.log("The new amount of WETH is %d\n", weth.balanceOf(address(this)) / 10 ** wethDecimals);
+        //    *** Your code here ***
+        
+        // END TODO
     }
 }
